@@ -1,0 +1,120 @@
+
+#cODIGO DE LA ACTIVIDAD ANTERIOR
+
+import heapq
+
+# Definimos la base de conocimiento
+knowledge_base = {
+    "conexiones": {
+        "A": ["B", "C"],
+        "B": ["D"],
+        "C": ["D"],
+        "D": ["E"],
+    }
+}
+
+# Defninimos la estructura de datos
+sistema_transporte = {
+    "estaciones": ["A", "B", "C", "D", "E"],
+    "conexiones": {
+        "A": ["B", "C"],
+        "B": ["A", "D"],
+        "C": ["A", "D"],
+        "D": ["B", "C", "E"],
+        "E": ["D"],
+    }
+}
+
+# Implementamos el algoritmo
+def dijkstra(inicio, objetivo, conexiones):
+    cola = [(0, inicio, [])]
+    visitado = set()
+    while cola:
+        (_, estacion_actual, ruta) = heapq.heappop(cola)
+        if estacion_actual not in visitado:
+            visitado.add(estacion_actual)
+            ruta = ruta + [estacion_actual]
+            if estacion_actual == objetivo:
+                return ruta
+            for vecino in conexiones[estacion_actual]:
+                if vecino not in visitado:
+                    heapq.heappush(cola, (0, vecino, ruta))
+    return []
+
+# corremos el codigo
+inicio = "A"
+objetivo = "E"
+ruta_optima = dijkstra(inicio, objetivo, sistema_transporte["conexiones"])
+
+if ruta_optima:
+    print(f"La mejor ruta desde {inicio} hasta {objetivo} es:", ruta_optima)
+else:
+    print("No se encontró una ruta desde", inicio, "hasta", objetivo)
+
+
+
+
+
+
+
+
+#CONJUNTO DE DATOS
+import pandas as pd
+
+# Datos de las conexiones entre estaciones
+conexiones = {
+    "origen": ["A", "A", "B", "B", "C", "C", "D", "D", "D", "E"],
+    "destino": ["B", "C", "A", "D", "A", "D", "B", "C", "E", "D"]
+}
+
+# Características de las estaciones
+estaciones = {
+    "estacion": ["A", "B", "C", "D", "E"],
+    "num_conexiones": [2, 2, 2, 3, 1],  # Número de conexiones de cada estación
+    "tiempo_promedio": [5, 7, 6, 8, 4]  # Tiempo promedio de viaje desde cada estación
+}
+
+# Convertir los diccionarios en DataFrames de pandas
+df_conexiones = pd.DataFrame(conexiones)
+df_estaciones = pd.DataFrame(estaciones)
+
+# Fusionar los DataFrames para obtener un solo conjunto de datos
+dataset = pd.merge(df_conexiones, df_estaciones, left_on="origen", right_on="estacion", how="left")
+dataset = pd.merge(dataset, df_estaciones, left_on="destino", right_on="estacion", suffixes=('_origen', '_destino'), how="left")
+
+# Eliminar columnas redundantes
+dataset = dataset.drop(columns=["estacion_origen", "estacion_destino"])
+
+print(dataset)
+
+
+
+
+
+
+
+#APRENDIZAJE SUPERVISADO
+
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+# Separar los datos en características (X) y etiquetas (y)
+X = dataset[['num_conexiones_origen', 'tiempo_promedio_origen', 'num_conexiones_destino', 'tiempo_promedio_destino']]
+y = dataset['destino']
+
+# Dividir los datos en conjuntos de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Inicializar y entrenar el modelo
+model = DecisionTreeClassifier()
+model.fit(X_train, y_train)
+
+# Predecir las etiquetas para los datos de prueba
+y_pred = model.predict(X_test)
+
+# Calcular la precisión del modelo
+accuracy = accuracy_score(y_test, y_pred)
+print("Precisión del modelo:", accuracy)
+
+
